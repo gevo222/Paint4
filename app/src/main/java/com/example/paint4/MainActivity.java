@@ -3,11 +3,9 @@ package com.example.paint4;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -23,7 +21,6 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.core.Size;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class MainActivity extends Activity implements View.OnTouchListener {
@@ -128,6 +125,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Opens photo storage to pick an image
                 Intent intent = new Intent(Intent.ACTION_PICK,
                         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(intent, RQS_IMAGE1);
@@ -172,17 +170,18 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     }
 
 
+    // Detects touch and motion
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         int action = motionEvent.getAction();
 
         switch (action) {
             case (MotionEvent.ACTION_DOWN):
-                //Log.d(TAG,"Action was DOWN");
+                // on touch draw circle at (x,y)
                 draw((int) motionEvent.getX(), (int) motionEvent.getY());
                 return true;
             case (MotionEvent.ACTION_MOVE):
-                //Log.d(TAG,"Action was MOVE");
+                // on movement draw circle at (x,y)
                 draw((int) motionEvent.getX(), (int) motionEvent.getY());
                 return true;
             /*case (MotionEvent.ACTION_UP):
@@ -203,6 +202,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
     }
 
+    // Loading image from photos
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -211,35 +211,28 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case RQS_IMAGE1:
-                    source = data.getData();
 
 
                     try {
-                        //tempBitmap is Immutable bitmap,
-                        //cannot be passed to Canvas constructor
+
+                        // Gets image from photos as Bitmap
                         bm = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
-                        /*tempBitmap = BitmapFactory.decodeStream(
-                                getContentResolver().openInputStream(source));
 
-                        bm = tempBitmap;*/
-
-
-                        //Mat m2 = Mat.zeros(1700, 1070, CvType.CV_8UC3);
+                        // Converts Bitmap to Mat so we can draw on it
                         Utils.bitmapToMat(bm, m);
-                        //Imgproc.cvtColor(m, m, Imgproc.COLOR_GRAY2RGB);
+
+                        // Mat is saved as 4 channels, converting it to 3 Channels
                         Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
+
+                        // Scaling Mat to fit our screen bounds
                         Imgproc.resize(m, m, new Size(1070, 1700));
+
+                        // Must reinitialize Bitmap
                         bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+
+                        // Bitmap to image
                         iv.setImageBitmap(bm);
                         draw(2000, 2000);
-                        Log.d(TAG, "" + m.size());
-                        Log.d(TAG, "" + m.channels());
-                        // Log.d(TAG,""+m.());
-                        //
-                        /*bm = tempBitmap;
-                        Utils.bitmapToMat(bm, m);
-                        //Log.d(TAG,""+m.size());
-                        iv.setImageBitmap(bm);*/
 
 
                     } catch (IOException e) {
