@@ -21,8 +21,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Size;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class MainActivity extends Activity implements View.OnTouchListener {
 
@@ -211,20 +213,36 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 case RQS_IMAGE1:
                     source = data.getData();
 
+
                     try {
                         //tempBitmap is Immutable bitmap,
                         //cannot be passed to Canvas constructor
-                        tempBitmap = BitmapFactory.decodeStream(
+                        bm = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+                        /*tempBitmap = BitmapFactory.decodeStream(
                                 getContentResolver().openInputStream(source));
 
+                        bm = tempBitmap;*/
 
-                        bm = tempBitmap;
+
+                        //Mat m2 = Mat.zeros(1700, 1070, CvType.CV_8UC3);
+                        Utils.bitmapToMat(bm, m);
+                        //Imgproc.cvtColor(m, m, Imgproc.COLOR_GRAY2RGB);
+                        Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
+                        Imgproc.resize(m, m, new Size(1070, 1700));
+                        bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+                        iv.setImageBitmap(bm);
+                        draw(2000, 2000);
+                        Log.d(TAG, "" + m.size());
+                        Log.d(TAG, "" + m.channels());
+                        // Log.d(TAG,""+m.());
+                        //
+                        /*bm = tempBitmap;
                         Utils.bitmapToMat(bm, m);
                         //Log.d(TAG,""+m.size());
-                        iv.setImageBitmap(bm);
+                        iv.setImageBitmap(bm);*/
 
 
-                    } catch (FileNotFoundException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
 
