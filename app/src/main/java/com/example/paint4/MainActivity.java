@@ -2,10 +2,11 @@ package com.example.paint4;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -38,12 +39,10 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     ImageView iv;
     Button btp, btm, btc;
     ImageButton bts, btl, btPen, btEra;
-    int thickness;
+    int rad;
     final int RQS_IMAGE1 = 1;
-    Uri source;
-    Bitmap tempBitmap;
     Scalar sc, white, black;
-
+    int width, height;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +53,10 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         sc = new Scalar(255, 0, 0);
         black = new Scalar(0, 0, 0);
         white = new Scalar(255, 255, 255);
-        thickness = 50;
+        rad = 30;
+        height = Resources.getSystem().getDisplayMetrics().heightPixels;
+        width = Resources.getSystem().getDisplayMetrics().widthPixels;
+
         btp = findViewById(R.id.button2);
         btm = findViewById(R.id.button3);
         btc = findViewById(R.id.clearButton);
@@ -62,9 +64,13 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btl = findViewById(R.id.loadButton);
         btPen = findViewById(R.id.pencilButton);
         btEra = findViewById(R.id.eraserButton);
-        m = Mat.zeros(1700, 1070, CvType.CV_8UC3);
-        bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+
+
         iv = (ImageView) findViewById(R.id.imageView1);
+        m = Mat.zeros(height,width , CvType.CV_8UC3);
+        bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+
+
 
         // Listen for touches on image
         iv.setOnTouchListener(this);
@@ -74,7 +80,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                thickness += 5;
+                rad += 5;
             }
         });
 
@@ -82,7 +88,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                thickness -= 5;
+                rad -= 5;
             }
         });
 
@@ -142,8 +148,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     // Drawing
     public void draw(int x, int y) {
 
-        // Draw circle with these params (Mat, touched point, circle radius, color, thickness)
-        Imgproc.circle(m, new Point(x, y), 2, sc /*new Scalar(sX, sY, sZ)*/, thickness);
+        // Draw circle with these params (Mat, touched point, circle radius, color, rad)
+        Imgproc.circle(m, new Point(x, y), rad, sc /*new Scalar(sX, sY, sZ)*/, -50);
         // convert to bitmap
         Utils.matToBitmap(m, bm);
         // the the bitmap to image
@@ -159,11 +165,12 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         // Saves image
         MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, filename, "paint4 app");
 
+
     }
 
     // Clear the drawing by reinitializing to blank Mat
     public void clear() {
-        m = Mat.zeros(1700, 1070, CvType.CV_8UC3);
+        m = Mat.zeros(height, width, CvType.CV_8UC3);
         bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
         iv.setImageBitmap(bm);
         draw(2000, 2000);
@@ -225,7 +232,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                         Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
 
                         // Scaling Mat to fit our screen bounds
-                        Imgproc.resize(m, m, new Size(1070, 1700));
+                        Imgproc.resize(m, m, new Size(width, height));
 
                         // Must reinitialize Bitmap
                         bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
