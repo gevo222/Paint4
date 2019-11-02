@@ -1,14 +1,9 @@
 package com.example.paint4;
 
 import android.app.Activity;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -18,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
@@ -26,49 +22,40 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import static java.security.AccessController.getContext;
 
 public class MainActivity extends Activity implements View.OnTouchListener {
+
+    // Initialize OpenCV
     static {
         OpenCVLoader.initDebug();
     }
 
-// TO-DO: Add saving and loading, redo comments
 
+    // Declare variables
     private static final String TAG = "MainActivity";
-    Mat m = Mat.zeros(1700, 1070, CvType.CV_8UC3);
-    Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+    Mat m;
+    Bitmap bm;
     ImageView iv;
-    Button btp;
-    Button btm;
-    Button btc;
-    ImageButton bts;
-    ImageButton btl;
-    ImageButton btPen;
-    ImageButton btEra;
+    Button btp, btm, btc;
+    ImageButton bts, btl, btPen, btEra;
     int thickness;
-    int sX, sY, sZ;
     final int RQS_IMAGE1 = 1;
     Uri source;
     Bitmap tempBitmap;
+    Scalar sc, white, black;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        sX = 255;
-        sY = 255;
-        sZ = 255;
-        thickness = 20;
+
+        // Initialize variables
+        sc = new Scalar(255, 0, 0);
+        black = new Scalar(0, 0, 0);
+        white = new Scalar(255, 255, 255);
+        thickness = 50;
         btp = findViewById(R.id.button2);
         btm = findViewById(R.id.button3);
         btc = findViewById(R.id.clearButton);
@@ -76,11 +63,15 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btl = findViewById(R.id.loadButton);
         btPen = findViewById(R.id.pencilButton);
         btEra = findViewById(R.id.eraserButton);
-
-
+        m = Mat.zeros(1700, 1070, CvType.CV_8UC3);
+        bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
         iv = (ImageView) findViewById(R.id.imageView1);
+
+        // Listen for touches on image
         iv.setOnTouchListener(this);
 
+
+        // Increase brush size
         btp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,6 +79,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             }
         });
 
+        // Decrease brush size
         btm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,6 +87,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             }
         });
 
+        // Clear the drawing
         btc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,31 +95,34 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             }
         });
 
+        // Pencil
         btPen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sX = 255;
-                sY = 255;
-                sZ = 255;
+                sc = white;
+
             }
         });
 
+        // Eraser
         btEra.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sX = 0;
-                sY = 0;
-                sZ = 0;
+                sc = black;
+
             }
         });
 
+
+        // Save image to photos
         bts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveBitmapToGallery(bm);
+                save(bm);
             }
         });
 
+        // Load image from photos
         btl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -135,30 +131,42 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 startActivityForResult(intent, RQS_IMAGE1);
             }
         });
-        helloworld(2000, 2000);
+
+
+        draw(2000, 2000);
 
 
     }
 
-    private void saveBitmapToGallery(Bitmap bitmap) {
 
-        String filename = "paint4-" + System.currentTimeMillis() + ".png";
-        String url = MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, filename, "paint4 app");
+    // Drawing
+    public void draw(int x, int y) {
 
-    }
-
-    public void helloworld(int x, int y) {
-        // make a mat and draw something
-
-        Imgproc.circle(m, new Point(x, y), 2, new Scalar(sX, sY, sZ), thickness);
-        // convert to bitmap:
-
+        // Draw circle with these params (Mat, touched point, circle radius, color, thickness)
+        Imgproc.circle(m, new Point(x, y), 2, sc /*new Scalar(sX, sY, sZ)*/, thickness);
+        // convert to bitmap
         Utils.matToBitmap(m, bm);
-
-        // find the imageview and draw it!
-
+        // the the bitmap to image
         iv.setImageBitmap(bm);
+    }
 
+    // Save bitmap to photos as png
+    private void save(Bitmap bitmap) {
+
+        // File is named based on system time
+        String filename = "paint4-" + System.currentTimeMillis() + ".png";
+
+        // Saves image
+        MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, filename, "paint4 app");
+
+    }
+
+    // Clear the drawing by reinitializing to blank Mat
+    public void clear() {
+        m = Mat.zeros(1700, 1070, CvType.CV_8UC3);
+        bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+        iv.setImageBitmap(bm);
+        draw(2000, 2000);
     }
 
 
@@ -169,15 +177,15 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         switch (action) {
             case (MotionEvent.ACTION_DOWN):
                 //Log.d(TAG,"Action was DOWN");
-                helloworld((int) motionEvent.getX(), (int) motionEvent.getY());
+                draw((int) motionEvent.getX(), (int) motionEvent.getY());
                 return true;
             case (MotionEvent.ACTION_MOVE):
                 //Log.d(TAG,"Action was MOVE");
-                helloworld((int) motionEvent.getX(), (int) motionEvent.getY());
+                draw((int) motionEvent.getX(), (int) motionEvent.getY());
                 return true;
-            case (MotionEvent.ACTION_UP):
+            /*case (MotionEvent.ACTION_UP):
                 //Log.d(TAG,"Action was UP");
-                helloworld((int) motionEvent.getX(), (int) motionEvent.getY());
+                draw((int) motionEvent.getX(), (int) motionEvent.getY());
                 return true;
             case (MotionEvent.ACTION_CANCEL):
                 //Log.d(TAG,"Action was CANCEL");
@@ -185,7 +193,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             case (MotionEvent.ACTION_OUTSIDE):
                 //Log.d(TAG,"Movement occurred outside bounds " +
                 //"of current screen element");
-                return true;
+                return true;*/
             default:
                 return super.onTouchEvent(motionEvent);
         }
@@ -193,18 +201,9 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
     }
 
-    public void clear() {
-        m = Mat.zeros(1700, 1070, CvType.CV_8UC3);
-        bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
-        iv.setImageBitmap(bm);
-        helloworld(2000, 2000);
-    }
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
 
 
         if (resultCode == RESULT_OK) {
@@ -218,29 +217,14 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                         tempBitmap = BitmapFactory.decodeStream(
                                 getContentResolver().openInputStream(source));
 
-                        Bitmap.Config config;
-                        if (tempBitmap.getConfig() != null) {
-                            config = tempBitmap.getConfig();
-                        } else {
-                            config = Bitmap.Config.ARGB_8888;
-                        }
 
                         bm = tempBitmap;
-                        Utils.bitmapToMat(bm,m);
+                        Utils.bitmapToMat(bm, m);
+                        //Log.d(TAG,""+m.size());
                         iv.setImageBitmap(bm);
 
-                        //bitmapMaster is Mutable bitmap
-                        /*bitmapMaster = Bitmap.createBitmap(
-                                tempBitmap.getWidth(),
-                                tempBitmap.getHeight(),
-                                config);
 
-                        canvasMaster = new Canvas(bitmapMaster);
-                        canvasMaster.drawBitmap(tempBitmap, 0, 0, null);
-
-                        imageResult.setImageBitmap(bitmapMaster);*/
                     } catch (FileNotFoundException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
 

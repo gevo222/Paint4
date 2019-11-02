@@ -23,7 +23,7 @@
         android:id="@+id/loadButton"
         android:layout_width="32dp"
         android:layout_height="38dp"
-        android:src="@android:drawable/ic_menu_save"
+        android:src="@android:drawable/ic_menu_upload"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/saveButton" />
 
