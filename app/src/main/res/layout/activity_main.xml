@@ -19,6 +19,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageButton
+        android:id="@+id/loadButton"
+        android:layout_width="32dp"
+        android:layout_height="38dp"
+        android:src="@android:drawable/ic_menu_save"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/saveButton" />
+
+    <ImageButton
+        android:id="@+id/saveButton"
+        android:layout_width="32dp"
+        android:layout_height="38dp"
+        android:src="@android:drawable/ic_menu_save"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <Button
         android:id="@+id/clearButton"
         android:layout_width="32dp"
