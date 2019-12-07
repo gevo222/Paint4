@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -12,6 +14,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -22,6 +33,7 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.core.Size;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class MainActivity extends Activity implements View.OnTouchListener {
@@ -33,16 +45,17 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
 
     // Declare variables
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "MainActivityy";
     Mat m;
     Bitmap bm;
     ImageView iv;
     Button btp, btm, btc;
-    ImageButton bts, btl, btPen, btEra;
+    ImageButton bts, btl, btPen, btEra, bttools, btColor, btRed, btBlue, btGreen;
     int rad;
     final int RQS_IMAGE1 = 1;
-    Scalar sc, white, black;
+    Scalar sc, white, black, red, blue, green;
     int width, height;
+    private StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +63,18 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         setContentView(R.layout.activity_main);
 
         // Initialize variables
-        sc = new Scalar(255, 0, 0);
+
+
+
+
+        sc = new Scalar(255, 255, 255);
         black = new Scalar(0, 0, 0);
         white = new Scalar(255, 255, 255);
+        red = new Scalar(255, 0, 0);
+        green = new Scalar(0, 255, 0);
+        blue = new Scalar(0, 0, 255);
+
+
         rad = 30;
         height = Resources.getSystem().getDisplayMetrics().heightPixels;
         width = Resources.getSystem().getDisplayMetrics().widthPixels;
@@ -64,7 +86,11 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btl = findViewById(R.id.loadButton);
         btPen = findViewById(R.id.pencilButton);
         btEra = findViewById(R.id.eraserButton);
-
+        bttools = findViewById(R.id.bttools);
+        btRed = findViewById(R.id.redButton);
+        btBlue = findViewById(R.id.blueButton);
+        btGreen = findViewById(R.id.greenButton);
+        btColor = findViewById(R.id.colorButton);
 
         iv = (ImageView) findViewById(R.id.imageView1);
         m = Mat.zeros(height,width , CvType.CV_8UC3);
@@ -118,12 +144,36 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             }
         });
 
+        btRed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sc = red;
+
+            }
+        });
+        btBlue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sc = blue;
+
+            }
+        });
+        btGreen.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sc = green;
+
+            }
+        });
+
+
 
         // Save image to photos
         bts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 save(bm);
+                //saveToDB();
             }
         });
 
@@ -138,10 +188,67 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             }
         });
 
+        allInvisible();
+
+        btColor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Opens edit buttons
+                if (btRed.getVisibility() == View.INVISIBLE) {
+                    btRed.setVisibility(View.VISIBLE);
+                    btBlue.setVisibility(View.VISIBLE);
+                    btGreen.setVisibility(View.VISIBLE);
+                }
+                else{
+                    btRed.setVisibility(View.INVISIBLE);
+                    btBlue.setVisibility(View.INVISIBLE);
+                    btGreen.setVisibility(View.INVISIBLE);
+
+                }
+
+            }
+        });
+
+        bttools.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Opens edit buttons
+                if (btl.getVisibility() == View.INVISIBLE)
+                    allVisible();
+                else allInvisible();
+
+            }
+        });
 
         draw(2000, 2000);
 
 
+
+    }
+
+    public void allVisible(){
+        btl.setVisibility(View.VISIBLE);
+        bts.setVisibility(View.VISIBLE);
+        btEra.setVisibility(View.VISIBLE);
+        btPen.setVisibility(View.VISIBLE);
+        btc.setVisibility(View.VISIBLE);
+        btm.setVisibility(View.VISIBLE);
+        btp.setVisibility(View.VISIBLE);
+        btColor.setVisibility(View.VISIBLE);
+    }
+
+    public void allInvisible(){
+        btl.setVisibility(View.INVISIBLE);
+        bts.setVisibility(View.INVISIBLE);
+        btEra.setVisibility(View.INVISIBLE);
+        btPen.setVisibility(View.INVISIBLE);
+        btc.setVisibility(View.INVISIBLE);
+        btm.setVisibility(View.INVISIBLE);
+        btp.setVisibility(View.INVISIBLE);
+        btColor.setVisibility(View.INVISIBLE);
+        btRed.setVisibility(View.INVISIBLE);
+        btBlue.setVisibility(View.INVISIBLE);
+        btGreen.setVisibility(View.INVISIBLE);
     }
 
 
@@ -167,6 +274,59 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
 
     }
+
+   /* private void saveToDB(Bitmap bitmap){
+        // Get the data from an ImageView as bytes
+
+        StorageReference latestRef = mStorageRef.child("latest.jpg");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        UploadTask uploadTask = latestRef.putBytes(data);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d(TAG, "onFailue: ");
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Log.d(TAG, "onSuccess: " + taskSnapshot.getMetadata());
+            }
+        });
+    }*/
+
+   private void saveToDB(){
+       // Get the data from an ImageView as bytes
+       iv.setDrawingCacheEnabled(true);
+       iv.buildDrawingCache();
+       Bitmap bitmap = ((BitmapDrawable) iv.getDrawable()).getBitmap();
+       ByteArrayOutputStream baos = new ByteArrayOutputStream();
+       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+       byte[] data = baos.toByteArray();
+
+       // Create a reference to "mountains.jpg"
+       StorageReference mountainsRef = mStorageRef.child("latest.jpg");
+
+       // Create a reference to 'images/mountains.jpg'
+       StorageReference mountainImagesRef = mStorageRef.child("images/latest.jpg");
+
+       UploadTask uploadTask = mountainsRef.putBytes(data);
+       uploadTask.addOnFailureListener(new OnFailureListener() {
+           @Override
+           public void onFailure(@NonNull Exception exception) {
+               // Handle unsuccessful uploads
+           }
+       }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+           @Override
+           public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+               // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+               // ...
+           }
+       });
+
+   }
 
     // Clear the drawing by reinitializing to blank Mat
     public void clear() {

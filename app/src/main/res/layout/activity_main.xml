@@ -20,6 +20,53 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
+        android:id="@+id/colorButton"
+        android:layout_width="32dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="32dp"
+        android:src="@android:drawable/ic_notification_overlay"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pencilButton" />
+
+    <ImageButton
+        android:id="@+id/redButton"
+        android:layout_width="32dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="32dp"
+        android:src="@android:drawable/ic_notification_overlay"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/colorButton" />
+
+    <ImageButton
+        android:id="@+id/blueButton"
+        android:layout_width="32dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="32dp"
+        android:src="@android:drawable/ic_notification_overlay"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/redButton" />
+
+    <ImageButton
+        android:id="@+id/greenButton"
+        android:layout_width="32dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="32dp"
+        android:src="@android:drawable/ic_notification_overlay"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/blueButton" />
+
+    <ImageButton
+        android:id="@+id/bttools"
+        android:layout_width="32dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/eraser2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
         android:id="@+id/loadButton"
         android:layout_width="32dp"
         android:layout_height="38dp"
