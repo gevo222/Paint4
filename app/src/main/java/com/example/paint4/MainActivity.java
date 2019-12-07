@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -235,6 +236,24 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
             }
         });
+
+        // autosave every _ seconds
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while(true) {
+                        sleep(10000);
+                        saveToDB();
+                        Log.d(TAG, "run: saved" + System.nanoTime());
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        thread.start();
 
         draw(2000, 2000);
 
