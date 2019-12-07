@@ -18,9 +18,13 @@ Original List of Requirments:
 
 
 New Features Since POC:
+
 -Pallete Button: Show/Hide tools for more space
+
 -Color Wheel Button: Show/Hide color options
+
 -Color options (Red, Blue, Green) [More can be added fairly easily]
+
 -Database: Autosave every 5 minutes [Thread], Autoload from database onCreate
 
 
