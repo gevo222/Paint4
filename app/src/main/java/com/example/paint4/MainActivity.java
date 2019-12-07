@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -56,6 +57,12 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     Scalar sc, white, black, red, blue, green;
     int width, height;
     private StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
+    // Create a reference to "mountains.jpg"
+    StorageReference mountainsRef = mStorageRef.child("latest.jpg");
+
+    // Create a reference to 'images/mountains.jpg'
+    StorageReference mountainImagesRef = mStorageRef.child("images/latest.jpg");
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +72,12 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         // Initialize variables
 
 
+        try {
+            loadFromDB();
+        }
+        catch(Exception e) {
 
+        }
 
         sc = new Scalar(255, 255, 255);
         black = new Scalar(0, 0, 0);
@@ -185,6 +197,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 Intent intent = new Intent(Intent.ACTION_PICK,
                         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(intent, RQS_IMAGE1);
+
+
             }
         });
 
@@ -216,6 +230,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 if (btl.getVisibility() == View.INVISIBLE)
                     allVisible();
                 else allInvisible();
+
+
 
             }
         });
@@ -306,11 +322,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
        byte[] data = baos.toByteArray();
 
-       // Create a reference to "mountains.jpg"
-       StorageReference mountainsRef = mStorageRef.child("latest.jpg");
 
-       // Create a reference to 'images/mountains.jpg'
-       StorageReference mountainImagesRef = mStorageRef.child("images/latest.jpg");
 
        UploadTask uploadTask = mountainsRef.putBytes(data);
        uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -326,6 +338,40 @@ public class MainActivity extends Activity implements View.OnTouchListener {
            }
        });
 
+   }
+
+   public void loadFromDB(){
+
+       final long ONE_MEGABYTE = 1024 * 1024;
+       mountainsRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+           @Override
+           public void onSuccess(byte[] bytes) {
+               Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+               // Converts Bitmap to Mat so we can draw on it
+               Utils.bitmapToMat(bm, m);
+
+               // Mat is saved as 4 channels, converting it to 3 Channels
+               Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
+
+               // Scaling Mat to fit our screen bounds
+               Imgproc.resize(m, m, new Size(width, height));
+
+               // Must reinitialize Bitmap
+               bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+
+               // Bitmap to image
+               iv.setImageBitmap(bm);
+               draw(2000, 2000);
+
+
+           }
+       }).addOnFailureListener(new OnFailureListener() {
+           @Override
+           public void onFailure(@NonNull Exception exception) {
+               Log.d(TAG, "onFailure: fail");
+           }
+       });
    }
 
     // Clear the drawing by reinitializing to blank Mat
