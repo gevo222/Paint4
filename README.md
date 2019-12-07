@@ -14,6 +14,7 @@ This can result in tasks being skipped, and ultimately missing some circles.
 
 
 Original List of Requirments:
+
 -Pencil and eraser with my own algorigthm using OpenCV.
 
 
