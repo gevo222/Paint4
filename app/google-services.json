@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_number": "349050326426",
+    "firebase_url": "https://paint4-1dc27.firebaseio.com",
+    "project_id": "paint4-1dc27",
+    "storage_bucket": "paint4-1dc27.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:349050326426:android:cb57c25a4a73db6b29fe23",
+        "android_client_info": {
+          "package_name": "com.example.paint4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "349050326426-59lvco51tqv33c9ar1kgmp8d2hr4bh9a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.paint4",
+            "certificate_hash": "e5d8ce3bc1e244c059cda347ac55d5747490c218"
+          }
+        },
+        {
+          "client_id": "349050326426-acsd679a7nmpvk1hh8nsn5o50ll7u3au.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.paint4",
+            "certificate_hash": "02c54c7e980f538bfe13955fed87dbfef87ead22"
+          }
+        },
+        {
+          "client_id": "349050326426-2j0ducd2iu5tppconu6vecv3mvrm2cr4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAST74tUYLrM2i5XmdkdpCy5rgkyPDtHY4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "349050326426-2j0ducd2iu5tppconu6vecv3mvrm2cr4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
