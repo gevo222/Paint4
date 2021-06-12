@@ -1,7 +1,7 @@
-## Paint4
+# Paint4
 An Android Editor application built with Java, OpenCV, and Firebase.
 
-## What I Learned
+# What I Learned
 * Save images to gallery.
 * Upload images from gallery.
 * Using and converting Mats and Bitmaps.
@@ -11,9 +11,9 @@ An Android Editor application built with Java, OpenCV, and Firebase.
 * Using a Thread to autosave and upload to firebase in the background.
 * Implementing drawing with OpenCV circles to challenge myself.
 
-## Extra Info:
+# Extra Info:
 
-# Tools
+## Tools
 * Save button: 	Saves to photos.
 * Load button: 	Loads from photos.
 * '+' '-' button:	Changes brush size.
@@ -24,7 +24,7 @@ An Android Editor application built with Java, OpenCV, and Firebase.
 * Database autosaves to firebase storage every 5 minutes.
 * Database autoloads from firebase storage when app is "created".
 
-# Brief explanation of drawing algorithm:
+## Brief explanation of drawing algorithm:
 1) User touches/motions on the screen. (OnTouchListener on ImageView)
 2) Gets touch coordinates and draws a circle at that coordinate on the Mat.
 3) Mat converted to Bitmap.
