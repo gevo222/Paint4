@@ -11,7 +11,7 @@ An Android Editor application built with Java, OpenCV, and Firebase.
 * Using a Thread to autosave and upload to firebase in the background.
 * Implementing drawing with OpenCV circles to challenge myself.
 
-# Extra Info:
+# Extra Info
 
 ## Tools
 * Save button: 	Saves to photos.
