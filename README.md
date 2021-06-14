@@ -1,5 +1,5 @@
 # Paint4
-An Android Editor application built with Java, OpenCV, and Firebase.
+An Android Editor application built in Android Studio with Java, OpenCV, and Firebase.
 
 # What I Learned
 * Save images to gallery.
