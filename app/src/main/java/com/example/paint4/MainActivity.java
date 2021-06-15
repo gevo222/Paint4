@@ -1,14 +1,13 @@
 package com.example.paint4;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -16,12 +15,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -30,39 +29,39 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
 import org.opencv.core.Point;
-import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity implements View.OnTouchListener {
+
+    // Declare variables
+    private static final String TAG = "MainActivityy";
 
     // Initialize OpenCV
     static {
         OpenCVLoader.initDebug();
     }
 
-
-    // Declare variables
-    private static final String TAG = "MainActivityy";
+    final int RQS_IMAGE1 = 1;
+    private final StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
     Mat m;
     Bitmap bm;
     ImageView iv;
     Button btp, btm, btc;
     ImageButton bts, btl, btPen, btEra, bttools, btColor, btRed, btBlue, btGreen;
     int rad;
-    final int RQS_IMAGE1 = 1;
     Scalar sc, white, black, red, blue, green;
     int width, height;
-    private StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
     // Create a reference to "mountains.jpg"
     StorageReference mountainsRef = mStorageRef.child("latest.jpg");
-
-    // Create a reference to 'images/mountains.jpg'
-    StorageReference mountainImagesRef = mStorageRef.child("images/latest.jpg");
 
 
     @Override
@@ -75,8 +74,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
         try {
             loadFromDB();
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
 
         }
 
@@ -106,9 +104,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btColor = findViewById(R.id.colorButton);
 
         iv = (ImageView) findViewById(R.id.imageView1);
-        m = Mat.zeros(height,width , CvType.CV_8UC3);
+        m = Mat.zeros(height, width, CvType.CV_8UC3);
         bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
-
 
 
         // Listen for touches on image
@@ -180,7 +177,6 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         });
 
 
-
         // Save image to photos
         bts.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -198,8 +194,6 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 Intent intent = new Intent(Intent.ACTION_PICK,
                         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(intent, RQS_IMAGE1);
-
-
             }
         });
 
@@ -213,14 +207,11 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                     btRed.setVisibility(View.VISIBLE);
                     btBlue.setVisibility(View.VISIBLE);
                     btGreen.setVisibility(View.VISIBLE);
-                }
-                else{
+                } else {
                     btRed.setVisibility(View.INVISIBLE);
                     btBlue.setVisibility(View.INVISIBLE);
                     btGreen.setVisibility(View.INVISIBLE);
-
                 }
-
             }
         });
 
@@ -228,23 +219,38 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             @Override
             public void onClick(View v) {
                 // Opens edit buttons
-                if (btl.getVisibility() == View.INVISIBLE)
+                if (btl.getVisibility() == View.INVISIBLE) {
                     allVisible();
-                else allInvisible();
-
-
-
+                } else {
+                    allInvisible();
+                }
             }
         });
 
+        Context context = getApplicationContext();
+        final Toast toast = Toast.makeText(context, "Autosaved", Toast.LENGTH_SHORT);
+
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                saveToDB();
+                toast.show();
+                Log.d(TAG, "run: saved" + System.nanoTime());
+            }
+        }, 30, 30, TimeUnit.SECONDS);
+
         // autosave every _ seconds
+
+        /* Used to use thread, trying ScheduledExecutorService
         Thread thread = new Thread() {
             @Override
             public void run() {
                 try {
-                    while(true) {
-                        sleep(10000);
+                    while (true) {
+                        sleep(30000);
                         saveToDB();
+                        toast.show();
                         Log.d(TAG, "run: saved" + System.nanoTime());
                     }
                 } catch (InterruptedException e) {
@@ -252,16 +258,22 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 }
             }
         };
-
         thread.start();
+        */
+
+        Runnable save = new Runnable() {
+            @Override
+            public void run() {
+                saveToDB();
+                toast.show();
+                Log.d(TAG, "run: saved" + System.nanoTime());
+            }
+        };
 
         draw(2000, 2000);
-
-
-
     }
 
-    public void allVisible(){
+    public void allVisible() {
         btl.setVisibility(View.VISIBLE);
         bts.setVisibility(View.VISIBLE);
         btEra.setVisibility(View.VISIBLE);
@@ -272,7 +284,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         btColor.setVisibility(View.VISIBLE);
     }
 
-    public void allInvisible(){
+    public void allInvisible() {
         btl.setVisibility(View.INVISIBLE);
         bts.setVisibility(View.INVISIBLE);
         btEra.setVisibility(View.INVISIBLE);
@@ -289,109 +301,80 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
     // Drawing
     public void draw(int x, int y) {
-
         // Draw circle with these params (Mat, touched point, circle radius, color, rad)
         Imgproc.circle(m, new Point(x, y), rad, sc /*new Scalar(sX, sY, sZ)*/, -50);
+
         // convert to bitmap
         Utils.matToBitmap(m, bm);
+
         // the the bitmap to image
         iv.setImageBitmap(bm);
     }
 
     // Save bitmap to photos as png
     private void save(Bitmap bitmap) {
-
         // File is named based on system time
         String filename = "paint4-" + System.currentTimeMillis() + ".png";
 
         // Saves image
         MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, filename, "paint4 app");
-
-
     }
 
-   /* private void saveToDB(Bitmap bitmap){
+    private void saveToDB() {
         // Get the data from an ImageView as bytes
-
-        StorageReference latestRef = mStorageRef.child("latest.jpg");
+        iv.setDrawingCacheEnabled(true);
+        iv.buildDrawingCache();
+        Bitmap bitmap = ((BitmapDrawable) iv.getDrawable()).getBitmap();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
 
-        UploadTask uploadTask = latestRef.putBytes(data);
+        UploadTask uploadTask = mountainsRef.putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                Log.d(TAG, "onFailue: ");
+                // Handle unsuccessful uploads
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Log.d(TAG, "onSuccess: " + taskSnapshot.getMetadata());
+                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                // ...
             }
         });
-    }*/
+    }
 
-   private void saveToDB(){
-       // Get the data from an ImageView as bytes
-       iv.setDrawingCacheEnabled(true);
-       iv.buildDrawingCache();
-       Bitmap bitmap = ((BitmapDrawable) iv.getDrawable()).getBitmap();
-       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-       byte[] data = baos.toByteArray();
+    public void loadFromDB() {
 
+        final long ONE_MEGABYTE = 1024 * 1024;
+        mountainsRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
+                // Converts Bitmap to Mat so we can draw on it
+                Utils.bitmapToMat(bm, m);
 
-       UploadTask uploadTask = mountainsRef.putBytes(data);
-       uploadTask.addOnFailureListener(new OnFailureListener() {
-           @Override
-           public void onFailure(@NonNull Exception exception) {
-               // Handle unsuccessful uploads
-           }
-       }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-           @Override
-           public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-               // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-               // ...
-           }
-       });
+                // Mat is saved as 4 channels, converting it to 3 Channels
+                Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
 
-   }
+                // Scaling Mat to fit our screen bounds
+                Imgproc.resize(m, m, new Size(width, height));
 
-   public void loadFromDB(){
+                // Must reinitialize Bitmap
+                bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
 
-       final long ONE_MEGABYTE = 1024 * 1024;
-       mountainsRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-           @Override
-           public void onSuccess(byte[] bytes) {
-               Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-
-               // Converts Bitmap to Mat so we can draw on it
-               Utils.bitmapToMat(bm, m);
-
-               // Mat is saved as 4 channels, converting it to 3 Channels
-               Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
-
-               // Scaling Mat to fit our screen bounds
-               Imgproc.resize(m, m, new Size(width, height));
-
-               // Must reinitialize Bitmap
-               bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
-
-               // Bitmap to image
-               iv.setImageBitmap(bm);
-               draw(2000, 2000);
-
-
-           }
-       }).addOnFailureListener(new OnFailureListener() {
-           @Override
-           public void onFailure(@NonNull Exception exception) {
-               Log.d(TAG, "onFailure: fail");
-           }
-       });
-   }
+                // Bitmap to image
+                iv.setImageBitmap(bm);
+                draw(2000, 2000);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d(TAG, "onFailure: fail");
+            }
+        });
+    }
 
     // Clear the drawing by reinitializing to blank Mat
     public void clear() {
@@ -416,22 +399,9 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 // on movement draw circle at (x,y)
                 draw((int) motionEvent.getX(), (int) motionEvent.getY());
                 return true;
-            /*case (MotionEvent.ACTION_UP):
-                //Log.d(TAG,"Action was UP");
-                draw((int) motionEvent.getX(), (int) motionEvent.getY());
-                return true;
-            case (MotionEvent.ACTION_CANCEL):
-                //Log.d(TAG,"Action was CANCEL");
-                return true;
-            case (MotionEvent.ACTION_OUTSIDE):
-                //Log.d(TAG,"Movement occurred outside bounds " +
-                //"of current screen element");
-                return true;*/
             default:
                 return super.onTouchEvent(motionEvent);
         }
-
-
     }
 
     // Loading image from photos
@@ -439,43 +409,33 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-
         if (resultCode == RESULT_OK) {
-            switch (requestCode) {
-                case RQS_IMAGE1:
+            if (requestCode == RQS_IMAGE1) {
+                try {
+                    // Gets image from photos as Bitmap
+                    bm = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
 
+                    // Converts Bitmap to Mat so we can draw on it
+                    Utils.bitmapToMat(bm, m);
 
-                    try {
+                    // Mat is saved as 4 channels, converting it to 3 Channels
+                    Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
 
-                        // Gets image from photos as Bitmap
-                        bm = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+                    // Scaling Mat to fit our screen bounds
+                    Imgproc.resize(m, m, new Size(width, height));
 
-                        // Converts Bitmap to Mat so we can draw on it
-                        Utils.bitmapToMat(bm, m);
+                    // Must reinitialize Bitmap
+                    bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
 
-                        // Mat is saved as 4 channels, converting it to 3 Channels
-                        Imgproc.cvtColor(m, m, Imgproc.COLOR_BGRA2BGR);
-
-                        // Scaling Mat to fit our screen bounds
-                        Imgproc.resize(m, m, new Size(width, height));
-
-                        // Must reinitialize Bitmap
-                        bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
-
-                        // Bitmap to image
-                        iv.setImageBitmap(bm);
-                        draw(2000, 2000);
-
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    break;
+                    // Bitmap to image
+                    iv.setImageBitmap(bm);
+                    draw(2000, 2000);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
-
 }
 
 
